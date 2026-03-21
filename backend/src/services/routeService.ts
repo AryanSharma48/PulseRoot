@@ -1,3 +1,4 @@
+import https from 'https';
 import { Coordinates } from '../types/index.js';
 
 function toRad(deg: number): number {
@@ -18,7 +19,7 @@ export function estimateETA(distanceKm: number, speedKmh: number): number {
   return Math.round((distanceKm / speedKmh) * 60 * 10) / 10;
 }
 
-export function interpolateRoute(from: Coordinates, to: Coordinates, steps = 20): Coordinates[] {
+export function interpolateRoute(from: Coordinates, to: Coordinates, steps = 40): Coordinates[] {
   const route: Coordinates[] = [];
   for (let i = 0; i <= steps; i++) {
     const t = i / steps;
@@ -30,9 +31,25 @@ export function interpolateRoute(from: Coordinates, to: Coordinates, steps = 20)
   return route;
 }
 
+function fallbackRoute(from: Coordinates, to: Coordinates) {
+  const dist = haversineDistance(from, to);
+  return { coords: interpolateRoute(from, to, 40), distanceKm: dist, durationMin: (dist / 40) * 60 };
+}
+
+/** Make HTTPS GET request using Node's built-in https module (more reliable than fetch) */
+function httpsGet(url: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    https.get(url, (res) => {
+      let data = '';
+      res.on('data', chunk => { data += chunk; });
+      res.on('end', () => resolve(data));
+      res.on('error', reject);
+    }).on('error', reject);
+  });
+}
+
 /**
  * Fetch a real road-based route from Mapbox Directions API.
- * Returns route coordinates, distance (km), and duration (minutes).
  */
 export async function fetchRoadRoute(
   from: Coordinates,
@@ -41,20 +58,18 @@ export async function fetchRoadRoute(
   const token = process.env.MAPBOX_TOKEN;
   if (!token) {
     console.warn('⚠️ MAPBOX_TOKEN not set, falling back to straight line');
-    const dist = haversineDistance(from, to);
-    return { coords: interpolateRoute(from, to, 20), distanceKm: dist, durationMin: dist / 40 * 60 };
+    return fallbackRoute(from, to);
   }
 
   const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${from.lng},${from.lat};${to.lng},${to.lat}?geometries=geojson&overview=full&access_token=${token}`;
 
   try {
-    const res = await fetch(url);
-    const data = await res.json();
+    const body = await httpsGet(url);
+    const data = JSON.parse(body);
 
     if (!data.routes || data.routes.length === 0) {
       console.warn('⚠️ No routes found, falling back to straight line');
-      const dist = haversineDistance(from, to);
-      return { coords: interpolateRoute(from, to, 20), distanceKm: dist, durationMin: dist / 40 * 60 };
+      return fallbackRoute(from, to);
     }
 
     const route = data.routes[0];
@@ -68,8 +83,7 @@ export async function fetchRoadRoute(
       durationMin: route.duration / 60,
     };
   } catch (err) {
-    console.error('Mapbox Directions API error:', err);
-    const dist = haversineDistance(from, to);
-    return { coords: interpolateRoute(from, to, 20), distanceKm: dist, durationMin: dist / 40 * 60 };
+    console.error('Mapbox API error:', err);
+    return fallbackRoute(from, to);
   }
 }

@@ -9,6 +9,7 @@ export interface Ambulance {
   location: Coordinates;
   status: 'available' | 'dispatched' | 'enroute' | 'busy';
   speed: number;
+  homeHospitalId: string;
 }
 
 export interface Hospital {
@@ -28,6 +29,7 @@ export interface EmergencyRequest {
 export interface RouteOption {
   ambulance: Ambulance;
   hospital: Hospital;
+  sourceHospital: Hospital;
   pickupETA: number;
   hospitalETA: number;
   totalTime: number;
@@ -43,4 +45,5 @@ export interface EmergencyResponse {
   optimal: RouteOption;
   alternatives: RouteOption[];
   timestamp: number;
+  error?: string;
 }

@@ -14,6 +14,10 @@ router.post('/emergency', async (req: Request, res: Response) => {
   }
   try {
     const result = await processEmergency(location, type);
+    if (result.error) {
+      res.json(result);
+      return;
+    }
     const amb = ambulances.find(a => a.id === result.optimal.ambulance.id);
     if (amb) amb.status = 'dispatched';
     res.json(result);

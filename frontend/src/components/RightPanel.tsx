@@ -11,7 +11,7 @@ export default function RightPanel({ optimal, nearest }: Props) {
   const timeSaved = nearest ? Math.round((nearest.totalTime - optimal.totalTime) * 10) / 10 : 0;
 
   return (
-    <div className="glass-panel p-5 w-80 animate-fade-in space-y-4">
+    <div className="glass-panel p-4 sm:p-5 w-full sm:w-80 animate-fade-in space-y-4 max-h-[calc(100vh-8rem)] overflow-y-auto overflow-x-hidden custom-scrollbar">
       <div className="flex items-center gap-2">
         <span className="text-lg">🧠</span>
         <h2 className="text-sm font-bold text-white uppercase tracking-wider">Decision Engine</h2>

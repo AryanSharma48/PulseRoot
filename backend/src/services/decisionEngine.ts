@@ -3,6 +3,8 @@ import { ambulances } from '../data/ambulances.js';
 import { hospitals } from '../data/hospitals.js';
 import { haversineDistance, estimateETA, fetchRoadRoute } from './routeService.js';
 
+const RADIUS_KM = 40;
+
 function generateId(): string {
   return `EMR-${Date.now().toString(36).toUpperCase()}`;
 }
@@ -14,15 +16,36 @@ export async function processEmergency(
   const available = ambulances.filter(a => a.status === 'available');
   const eligible = hospitals.filter(h => h.hasEmergency && h.availableBeds > 0);
 
-  // Phase 1: Quick haversine scoring to find top candidates
+  // Filter ambulances within 50km radius
+  const inRadius = available.filter(a => {
+    const dist = haversineDistance(a.location, userLocation);
+    return dist <= RADIUS_KM;
+  });
+
+  if (inRadius.length === 0) {
+    return {
+      id: generateId(),
+      userLocation,
+      optimal: null as any,
+      alternatives: [],
+      timestamp: Date.now(),
+      error: 'No ambulances available within 40km of your location.',
+    };
+  }
+
+  // Phase 1: Quick haversine scoring for ambulances in radius
   const candidates: {
-    ambulance: typeof available[0];
+    ambulance: typeof inRadius[0];
     hospital: typeof eligible[0];
+    sourceHospital: typeof eligible[0];
     roughTime: number;
     score: number;
   }[] = [];
 
-  for (const ambulance of available) {
+  for (const ambulance of inRadius) {
+    // Find the ambulance's home hospital
+    const sourceHospital = hospitals.find(h => h.id === ambulance.homeHospitalId);
+
     for (const hospital of eligible) {
       const ambToUser = haversineDistance(ambulance.location, userLocation);
       const userToHosp = haversineDistance(userLocation, hospital.location);
@@ -34,14 +57,20 @@ export async function processEmergency(
       }
       score *= 1 - (hospital.availableBeds / 20) * 0.1;
 
-      candidates.push({ ambulance, hospital, roughTime, score });
+      candidates.push({
+        ambulance,
+        hospital,
+        sourceHospital: sourceHospital || hospital,
+        roughTime,
+        score,
+      });
     }
   }
 
   candidates.sort((a, b) => a.score - b.score);
   const topCandidates = candidates.slice(0, 3);
 
-  // Phase 2: Fetch real road routes for top 3 only
+  // Phase 2: Fetch real road routes for top 3
   const options: RouteOption[] = await Promise.all(
     topCandidates.map(async (c) => {
       const [leg1, leg2] = await Promise.all([
@@ -55,6 +84,7 @@ export async function processEmergency(
       return {
         ambulance: { ...c.ambulance },
         hospital: { ...c.hospital },
+        sourceHospital: { ...c.sourceHospital },
         pickupETA: Math.round(leg1.durationMin * 10) / 10,
         hospitalETA: Math.round(leg2.durationMin * 10) / 10,
         totalTime,
