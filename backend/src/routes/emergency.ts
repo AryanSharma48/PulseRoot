@@ -6,16 +6,21 @@ import { EmergencyRequest } from '../types/index.js';
 
 const router = Router();
 
-router.post('/emergency', (req: Request, res: Response) => {
+router.post('/emergency', async (req: Request, res: Response) => {
   const { location, type } = req.body as EmergencyRequest;
   if (!location?.lat || !location?.lng) {
     res.status(400).json({ error: 'Location (lat, lng) required' });
     return;
   }
-  const result = processEmergency(location, type);
-  const amb = ambulances.find(a => a.id === result.optimal.ambulance.id);
-  if (amb) amb.status = 'dispatched';
-  res.json(result);
+  try {
+    const result = await processEmergency(location, type);
+    const amb = ambulances.find(a => a.id === result.optimal.ambulance.id);
+    if (amb) amb.status = 'dispatched';
+    res.json(result);
+  } catch (err) {
+    console.error('Emergency processing error:', err);
+    res.status(500).json({ error: 'Failed to process emergency' });
+  }
 });
 
 router.get('/ambulances', (_req: Request, res: Response) => {

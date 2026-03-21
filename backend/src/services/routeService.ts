@@ -29,3 +29,47 @@ export function interpolateRoute(from: Coordinates, to: Coordinates, steps = 20)
   }
   return route;
 }
+
+/**
+ * Fetch a real road-based route from Mapbox Directions API.
+ * Returns route coordinates, distance (km), and duration (minutes).
+ */
+export async function fetchRoadRoute(
+  from: Coordinates,
+  to: Coordinates,
+): Promise<{ coords: Coordinates[]; distanceKm: number; durationMin: number }> {
+  const token = process.env.MAPBOX_TOKEN;
+  if (!token) {
+    console.warn('⚠️ MAPBOX_TOKEN not set, falling back to straight line');
+    const dist = haversineDistance(from, to);
+    return { coords: interpolateRoute(from, to, 20), distanceKm: dist, durationMin: dist / 40 * 60 };
+  }
+
+  const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${from.lng},${from.lat};${to.lng},${to.lat}?geometries=geojson&overview=full&access_token=${token}`;
+
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (!data.routes || data.routes.length === 0) {
+      console.warn('⚠️ No routes found, falling back to straight line');
+      const dist = haversineDistance(from, to);
+      return { coords: interpolateRoute(from, to, 20), distanceKm: dist, durationMin: dist / 40 * 60 };
+    }
+
+    const route = data.routes[0];
+    const coords: Coordinates[] = route.geometry.coordinates.map(
+      (c: [number, number]) => ({ lat: c[1], lng: c[0] })
+    );
+
+    return {
+      coords,
+      distanceKm: route.distance / 1000,
+      durationMin: route.duration / 60,
+    };
+  } catch (err) {
+    console.error('Mapbox Directions API error:', err);
+    const dist = haversineDistance(from, to);
+    return { coords: interpolateRoute(from, to, 20), distanceKm: dist, durationMin: dist / 40 * 60 };
+  }
+}

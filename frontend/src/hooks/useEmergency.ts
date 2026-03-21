@@ -60,10 +60,25 @@ export function useEmergency() {
       const res = await triggerEmergency(loc, type);
       setState(p => ({ ...p, isActive: true, isLoading: false, response: res, userLocation: loc, phase: 'dispatched', elapsedTime: 0 }));
       timerRef.current = setInterval(() => setState(p => ({ ...p, elapsedTime: p.elapsedTime + 1 })), 1000);
+      // Count waypoints in the ambulance→user leg (before user→hospital leg starts)
+      const routeCoords = res.optimal.routeCoords ?? [];
+      // Find the waypoint closest to user location to split legs
+      let pickupWaypointCount = Math.floor(routeCoords.length / 2);
+      if (routeCoords.length > 0) {
+        let minDist = Infinity;
+        routeCoords.forEach((c, i) => {
+          const d = Math.abs(c.lat - loc.lat) + Math.abs(c.lng - loc.lng);
+          if (d < minDist) { minDist = d; pickupWaypointCount = i; }
+        });
+      }
+
       socket.emit('emergency:simulate', {
         ambulanceId: res.optimal.ambulance.id,
         userLocation: loc,
         hospitalLocation: res.optimal.hospital.location,
+        routeCoords,
+        pickupWaypointCount,
+        totalDurationMin: res.optimal.totalTime,
       });
     } catch (e) {
       console.error('Emergency failed:', e);
