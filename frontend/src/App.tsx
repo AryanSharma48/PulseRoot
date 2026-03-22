@@ -6,6 +6,7 @@ import RightPanel from './components/RightPanel';
 import BottomPanel from './components/BottomPanel';
 import ErrorModal from './components/ErrorModal';
 
+
 export default function App() {
   const em = useEmergency();
   const availableCount = em.ambulances.filter(a => a.status === 'available').length;
@@ -61,6 +62,7 @@ export default function App() {
               optimal={em.response.optimal}
               phase={em.phase}
               elapsedTime={em.elapsedTime}
+              bookingTime={em.bookingTime}
             />
           </div>
         )}

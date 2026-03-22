@@ -16,6 +16,7 @@ export interface EmergencyState {
   elapsedTime: number;
   locationMode: 'none' | 'gps' | 'pin';
   errorMessage: string | null;
+  bookingTime: Date | null;
 }
 
 export function useEmergency() {
@@ -24,7 +25,7 @@ export function useEmergency() {
     ambulances: [], hospitals: [], liveUpdate: null,
     userLocation: null, pinnedLocation: null,
     phase: 'idle', elapsedTime: 0, locationMode: 'none',
-    errorMessage: null,
+    errorMessage: null, bookingTime: null,
   });
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -101,7 +102,7 @@ export function useEmergency() {
         setState(p => ({ ...p, isLoading: false, errorMessage: res.error! }));
         return;
       }
-      setState(p => ({ ...p, isActive: true, isLoading: false, response: res, userLocation: loc, phase: 'dispatched', elapsedTime: 0 }));
+      setState(p => ({ ...p, isActive: true, isLoading: false, response: res, userLocation: loc, phase: 'dispatched', elapsedTime: 0, bookingTime: new Date() }));
       timerRef.current = setInterval(() => setState(p => ({ ...p, elapsedTime: p.elapsedTime + 1 })), 1000);
 
       const routeCoords = res.optimal.routeCoords ?? [];
@@ -133,7 +134,7 @@ export function useEmergency() {
     socket.emit('emergency:reset');
     await resetSystem();
     const [a, h] = await Promise.all([getAmbulances(), getHospitals()]);
-    setState({ isActive: false, isLoading: false, response: null, ambulances: a, hospitals: h, liveUpdate: null, userLocation: null, pinnedLocation: null, phase: 'idle', elapsedTime: 0, locationMode: 'none', errorMessage: null });
+    setState({ isActive: false, isLoading: false, response: null, ambulances: a, hospitals: h, liveUpdate: null, userLocation: null, pinnedLocation: null, phase: 'idle', elapsedTime: 0, locationMode: 'none', errorMessage: null, bookingTime: null });
   }, []);
 
   const clearError = useCallback(() => setState(p => ({ ...p, errorMessage: null })), []);

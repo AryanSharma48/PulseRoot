@@ -44,6 +44,38 @@ export default function MapView({
     });
 
     map.on('load', () => {
+      // ── Live traffic layer (Mapbox traffic-v1 vector tiles) ──────────────
+      map.addSource('mapbox-traffic', {
+        type: 'vector',
+        url: 'mapbox://mapbox.mapbox-traffic-v1',
+      });
+      map.addLayer({
+        id: 'traffic-layer',
+        type: 'line',
+        source: 'mapbox-traffic',
+        'source-layer': 'traffic',
+        layout: { 'line-join': 'round', 'line-cap': 'round' },
+        paint: {
+          'line-width': [
+            'interpolate', ['linear'], ['zoom'],
+            8, 1.5,
+            12, 2.5,
+            16, 4,
+          ],
+          'line-color': [
+            'match',
+            ['get', 'congestion'],
+            'low',      '#22c55e',   // green
+            'moderate', '#facc15',   // yellow
+            'heavy',    '#f97316',   // orange
+            'severe',   '#ef4444',   // red
+            /* default */ '#94a3b8', // gray
+          ],
+          'line-opacity': 0.85,
+        },
+      });
+
+      // ── Ambulance route overlays (drawn on top of traffic) ───────────────
       map.addSource('optimal-route', {
         type: 'geojson',
         data: { type: 'Feature', geometry: { type: 'LineString', coordinates: [] }, properties: {} },

@@ -5,6 +5,15 @@ interface Props {
   optimal: RouteOption | null;
   phase: string;
   elapsedTime: number;
+  bookingTime: Date | null;
+}
+
+function fmtBookingDate(d: Date): string {
+  return d.toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function fmtBookingTime(d: Date): string {
+  return d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase();
 }
 
 function fmt(s: number) {
@@ -13,7 +22,7 @@ function fmt(s: number) {
   return `${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
 }
 
-export default function BottomPanel({ liveUpdate, optimal, phase, elapsedTime }: Props) {
+export default function BottomPanel({ liveUpdate, optimal, phase, elapsedTime, bookingTime }: Props) {
   if (!optimal) return null;
 
   return (
@@ -83,6 +92,15 @@ export default function BottomPanel({ liveUpdate, optimal, phase, elapsedTime }:
             <p className="text-base sm:text-lg font-mono font-bold text-white drop-shadow-lg">{fmt(elapsedTime)}</p>
           </div>
         </div>
+
+        {/* Booking Time */}
+        {bookingTime && (
+          <div className="flex flex-col items-center w-full sm:w-auto order-6 sm:order-6 border-t sm:border-t-0 sm:border-l border-white/10 pt-2 sm:pt-0 sm:pl-4">
+            <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wider">📅 Booked At</p>
+            <p className="text-white font-semibold text-xs sm:text-sm font-mono">{fmtBookingTime(bookingTime)}</p>
+            <p className="text-gray-400 text-[10px] sm:text-xs">{fmtBookingDate(bookingTime)}</p>
+          </div>
+        )}
 
       </div>
     </div>
