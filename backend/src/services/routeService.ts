@@ -50,8 +50,31 @@ function httpsGet(url: string): Promise<string> {
 
 /**
  * Fetch a real road-based route from Mapbox Directions API.
+ * Uses the plain `driving` profile — no traffic adjustment.
+ * Used for simulation/animation coordinates.
  */
 export async function fetchRoadRoute(
+  from: Coordinates,
+  to: Coordinates,
+): Promise<{ coords: Coordinates[]; distanceKm: number; durationMin: number }> {
+  return _fetchMapboxRoute('driving', from, to);
+}
+
+/**
+ * Fetch a traffic-aware route using Mapbox `driving-traffic` profile.
+ * Duration is adjusted for LIVE traffic conditions — this is the A* edge cost.
+ * Used by the decision engine to find the fastest ambulance to dispatch.
+ */
+export async function fetchTrafficRoute(
+  from: Coordinates,
+  to: Coordinates,
+): Promise<{ coords: Coordinates[]; distanceKm: number; durationMin: number }> {
+  return _fetchMapboxRoute('driving-traffic', from, to);
+}
+
+/** Internal: fetch route with given Mapbox profile */
+async function _fetchMapboxRoute(
+  profile: 'driving' | 'driving-traffic',
   from: Coordinates,
   to: Coordinates,
 ): Promise<{ coords: Coordinates[]; distanceKm: number; durationMin: number }> {
@@ -61,14 +84,17 @@ export async function fetchRoadRoute(
     return fallbackRoute(from, to);
   }
 
-  const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${from.lng},${from.lat};${to.lng},${to.lat}?geometries=geojson&overview=full&access_token=${token}`;
+  const url =
+    `https://api.mapbox.com/directions/v5/mapbox/${profile}/` +
+    `${from.lng},${from.lat};${to.lng},${to.lat}` +
+    `?geometries=geojson&overview=full&access_token=${token}`;
 
   try {
     const body = await httpsGet(url);
     const data = JSON.parse(body);
 
     if (!data.routes || data.routes.length === 0) {
-      console.warn('⚠️ No routes found, falling back to straight line');
+      console.warn(`⚠️ No routes found (${profile}), falling back to straight line`);
       return fallbackRoute(from, to);
     }
 
@@ -83,7 +109,7 @@ export async function fetchRoadRoute(
       durationMin: route.duration / 60,
     };
   } catch (err) {
-    console.error('Mapbox API error:', err);
+    console.error(`Mapbox API error (${profile}):`, err);
     return fallbackRoute(from, to);
   }
 }
