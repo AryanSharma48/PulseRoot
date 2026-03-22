@@ -19,7 +19,7 @@ export default function App() {
   }, [em.isActive]);
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-pulse-dark">
+    <div className="relative w-screen h-[100dvh] overflow-hidden bg-pulse-dark">
       <MapView
         ambulances={em.ambulances}
         hospitals={em.hospitals}
@@ -56,7 +56,7 @@ export default function App() {
         )}
 
         {em.isActive && em.response && (
-          <div className="absolute bottom-20 sm:bottom-4 left-4 right-4 z-10 overflow-hidden">
+          <div className="absolute bottom-24 sm:bottom-4 left-4 right-4 z-10 overflow-hidden">
             <BottomPanel
               liveUpdate={em.liveUpdate}
               optimal={em.response.optimal}
@@ -84,7 +84,7 @@ export default function App() {
       </div>
 
       {/* Mobile Toggle Bar */}
-      <div className="sm:hidden absolute bottom-4 left-4 right-4 z-30">
+      <div className="sm:hidden absolute bottom-6 left-4 right-4 z-30">
         <button
           onClick={() => setShowPanels(!showPanels)}
           className={`w-full py-3 rounded-xl shadow-xl flex items-center justify-center gap-2 font-bold transition-all active:scale-95 ${
