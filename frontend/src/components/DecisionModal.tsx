@@ -1,4 +1,5 @@
 import type { RouteOption } from '../types';
+import { formatNumber } from '../utils/format';
 
 interface Props {
   optimal: RouteOption;
@@ -42,11 +43,11 @@ export default function DecisionModal({ optimal, nearest, onClose }: Props) {
             <div className="grid grid-cols-2 gap-y-4 gap-x-2 bg-black/20 p-3 rounded-xl border border-white/5">
               <div>
                 <span className="block text-[10px] text-gray-500 uppercase tracking-wider mb-0.5">Pickup ETA</span>
-                <span className="text-pulse-green font-mono font-bold text-base">{optimal.pickupETA.toFixed(1)} <span className="text-[10px] text-gray-400">min</span></span>
+                <span className="text-pulse-green font-mono font-bold text-base">{formatNumber(optimal.pickupETA)} <span className="text-[10px] text-gray-400">min</span></span>
               </div>
               <div>
                 <span className="block text-[10px] text-gray-500 uppercase tracking-wider mb-0.5">Total Time</span>
-                <span className="text-pulse-green font-mono font-bold text-base">{optimal.totalTime.toFixed(1)} <span className="text-[10px] text-gray-400">min</span></span>
+                <span className="text-pulse-green font-mono font-bold text-base">{formatNumber(optimal.totalTime)} <span className="text-[10px] text-gray-400">min</span></span>
               </div>
               <div className="col-span-2">
                 <span className="block text-[10px] text-gray-500 uppercase tracking-wider mb-0.5">Hospital</span>
@@ -74,11 +75,11 @@ export default function DecisionModal({ optimal, nearest, onClose }: Props) {
               <div className="grid grid-cols-2 gap-y-4 gap-x-2 bg-black/20 p-3 rounded-xl border border-white/5">
                 <div>
                   <span className="block text-[10px] text-gray-500 uppercase tracking-wider mb-0.5">Pickup ETA</span>
-                  <span className="text-gray-300 font-mono font-bold text-sm">{nearest.pickupETA.toFixed(1)} <span className="text-[10px]">min</span></span>
+                  <span className="text-gray-300 font-mono font-bold text-sm">{formatNumber(nearest.pickupETA)} <span className="text-[10px]">min</span></span>
                 </div>
                 <div>
                   <span className="block text-[10px] text-gray-500 uppercase tracking-wider mb-0.5">Total Time</span>
-                  <span className="text-gray-300 font-mono font-bold text-sm">{nearest.totalTime.toFixed(1)} <span className="text-[10px]">min</span></span>
+                  <span className="text-gray-300 font-mono font-bold text-sm">{formatNumber(nearest.totalTime)} <span className="text-[10px]">min</span></span>
                 </div>
                 <div className="col-span-2">
                   <span className="block text-[10px] text-gray-500 uppercase tracking-wider mb-0.5">Hospital</span>

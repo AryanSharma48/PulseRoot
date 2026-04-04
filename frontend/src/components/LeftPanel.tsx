@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { EmergencyType, Coordinates, RouteOption } from '../types';
 import DecisionModal from './DecisionModal';
+import { formatNumber, formatOptionalNumber } from '../utils/format';
 
 interface Props {
   onTrigger: (type?: EmergencyType) => void;
@@ -57,7 +58,7 @@ export default function LeftPanel({
                     {locationMode === 'gps' ? '📡 GPS Location' : '📍 Pinned Location'}
                   </p>
                   <p className="text-xs text-gray-400 font-mono">
-                    {pinnedLocation!.lat.toFixed(4)}, {pinnedLocation!.lng.toFixed(4)}
+                    {formatNumber(pinnedLocation!.lat)}, {formatNumber(pinnedLocation!.lng)}
                   </p>
                 </div>
                 <button onClick={onClearPin} className="text-xs text-red-400 hover:text-red-300 px-2">✕</button>
@@ -116,7 +117,7 @@ export default function LeftPanel({
         <div className="text-right">
           <p className="text-xs text-gray-500">Est. Response</p>
           <p className="text-2xl font-bold text-pulse-green">
-            {estimatedTime ? `${estimatedTime}m` : '—'}
+            {formatOptionalNumber(estimatedTime)}m
           </p>
         </div>
       </div>

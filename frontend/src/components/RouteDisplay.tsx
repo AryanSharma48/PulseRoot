@@ -1,4 +1,5 @@
 import { RouteOption } from '../types';
+import { formatNumber } from '../utils/format';
 
 interface Props { route: RouteOption; }
 
@@ -10,8 +11,8 @@ export default function RouteDisplay({ route }: Props) {
         {route.isOptimal && <span className="status-pill bg-green-500/20 text-green-400">Best</span>}
       </div>
       <div className="flex gap-4 text-sm">
-        <div><span className="text-gray-500">ETA: </span><span className="text-white font-mono">{route.totalTime}m</span></div>
-        <div><span className="text-gray-500">Dist: </span><span className="text-white font-mono">{route.distance}km</span></div>
+        <div><span className="text-gray-500">ETA: </span><span className="text-white font-mono">{formatNumber(route.totalTime)}m</span></div>
+        <div><span className="text-gray-500">Dist: </span><span className="text-white font-mono">{formatNumber(route.distance)}km</span></div>
       </div>
     </div>
   );

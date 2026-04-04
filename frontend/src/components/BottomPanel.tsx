@@ -1,4 +1,5 @@
 import { AmbulanceUpdate, RouteOption } from '../types';
+import { formatNumber, formatOptionalNumber } from '../utils/format';
 
 interface Props {
   liveUpdate: AmbulanceUpdate | null;
@@ -78,13 +79,13 @@ export default function BottomPanel({ liveUpdate, optimal, phase, elapsedTime, b
           <div className="text-center">
             <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wider">Speed</p>
             <p className="text-base sm:text-lg font-mono font-bold text-pulse-cyan drop-shadow-lg">
-              {liveUpdate?.speed ?? optimal.ambulance.speed} <span className="text-[10px] sm:text-xs text-gray-400">km/h</span>
+              {formatNumber(liveUpdate?.speed ?? optimal.ambulance.speed)} <span className="text-[10px] sm:text-xs text-gray-400">km/h</span>
             </p>
           </div>
           <div className="text-center">
             <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wider">Distance</p>
             <p className="text-base sm:text-lg font-mono font-bold text-pulse-blue drop-shadow-lg">
-              {liveUpdate?.distanceRemaining?.toFixed(1) ?? '—'} <span className="text-[10px] sm:text-xs text-gray-400">km</span>
+              {formatOptionalNumber(liveUpdate?.distanceRemaining)} <span className="text-[10px] sm:text-xs text-gray-400">km</span>
             </p>
           </div>
           <div className="text-center">
